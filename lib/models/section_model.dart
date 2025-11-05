@@ -7,31 +7,31 @@ class SectionModel {
   final String sectionName;
   final String? sectionDescription;
   final List<TaskModel> tasks;
-  final List<TaskModel> completedTask;
+  final List<TaskModel> completedTasks;
 
   SectionModel({
     String? sectionId,
     required this.sectionName,
     this.sectionDescription,
     List<TaskModel>? tasks,
-    List<TaskModel>? completedTask,
+    List<TaskModel>? completedTasks,
   }) : sectionId = sectionId ?? uuid.v4(),
        tasks = tasks ?? [],
-       completedTask = completedTask ?? [];
+       completedTasks = completedTasks ?? [];
 
   SectionModel copyWith({
     String? sectionName,
     String? sectionDescription,
 
     List<TaskModel>? tasks,
-    List<TaskModel>? completedTask,
+    List<TaskModel>? completedTasks,
   }) {
     return SectionModel(
       sectionId: sectionId,
       sectionName: sectionName ?? this.sectionName,
       sectionDescription: sectionDescription ?? this.sectionDescription,
       tasks: tasks ?? this.tasks,
-      completedTask: completedTask ?? this.completedTask,
+      completedTasks: completedTasks ?? this.completedTasks,
     );
   }
 }

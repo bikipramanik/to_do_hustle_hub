@@ -203,7 +203,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: EdgeInsets.only(
                       right: 10,
                       left: 10,
-                      bottom: selectedSection.completedTask.isEmpty ? 110 : 10,
+                      bottom: selectedSection.completedTasks.isEmpty ? 110 : 10,
                     ),
                     sliver: SliverToBoxAdapter(
                       child: Container(
@@ -226,7 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-            if (selectedSection.completedTask.isNotEmpty)
+            if (selectedSection.completedTasks.isNotEmpty)
               SliverToBoxAdapter(
                 child: Container(
                   height: 10,
@@ -234,7 +234,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-            if (selectedSection.completedTask.isNotEmpty)
+            if (selectedSection.completedTasks.isNotEmpty)
               SliverPadding(
                 padding: EdgeInsets.only(
                   right: 10,
@@ -281,7 +281,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-            if (selectedSection.completedTask.isNotEmpty &&
+            if (selectedSection.completedTasks.isNotEmpty &&
                 taskState.showCompletedTask)
               SliverPadding(
                 padding: const EdgeInsets.only(
@@ -293,16 +293,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.9,
                     decoration: BoxDecoration(
-                      color: Colors.black,
+                      color: const Color.fromARGB(255, 22, 22, 22),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Column(
                       children: [
                         ...List.generate(
-                          selectedSection.completedTask.length,
+                          selectedSection.completedTasks.length,
                           (index) => CompletedTaskWidget(
-                            task: selectedSection.completedTask[index],
+                            task: selectedSection.completedTasks[index],
                           ),
                         ),
                       ],

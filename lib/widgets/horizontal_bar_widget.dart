@@ -38,6 +38,7 @@ class HorizontalBarWidget extends SliverPersistentHeaderDelegate {
                       ? ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text("This Section can not be deleted"),
+                            duration: Duration(seconds: 1),
                           ),
                         )
                       : showDialog(
@@ -58,6 +59,14 @@ class HorizontalBarWidget extends SliverPersistentHeaderDelegate {
                                   onPressed: () {
                                     deleteSection(index);
                                     Navigator.of(context).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "\"${sections[index].sectionName}\" is deleted",
+                                        ),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
                                   },
                                   child: Text("Delete"),
                                 ),

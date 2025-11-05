@@ -42,6 +42,7 @@ class CreateSectionScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(12.0),
         child: TextField(
+          autofocus: true,
           controller: sectionNameController,
           onTapOutside: (_) => FocusScope.of(context).unfocus(),
           cursorHeight: 25,
