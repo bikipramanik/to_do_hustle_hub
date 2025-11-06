@@ -36,15 +36,13 @@ class CompletedTaskWidget extends ConsumerWidget {
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      taskManager.deletTask(task);
+                      taskManager.deleteTask(task);
                       ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "\"${task.taskName}\" is deleted",
-                                        ),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
+                        SnackBar(
+                          content: Text("\"${task.taskName}\" is deleted"),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
                     },
                     child: Text("Delete", style: TextStyle(color: Colors.red)),
                   ),

@@ -156,7 +156,134 @@ class TaskManager extends StateNotifier<TaskStateModel> {
     _updateSection(updatedSection);
   }
 
-  void deletTask(TaskModel task) {
+  void moveTaskToAnotherSection(
+    TaskModel task,
+    int newSectionIndex,
+    int oldSectionIndex,
+  ) {
+    //if the task is starred we have to update the tasks parentSection Id from the star section too
+    //we have to delete the task from old section
+    //have to add the task into new section
+    if (task.starred) {
+      final oldSection = state.sections[oldSectionIndex];
+      final newSection = state.sections[newSectionIndex];
+      final starSection = state.sections[0];
+      final updatedOldSection = oldSection.copyWith(
+        tasks: oldSection.tasks.where((t) => t.taskId != task.taskId).toList(),
+      );
+      final updatedNewSection = newSection.copyWith(
+        tasks: [
+          ...newSection.tasks,
+          task.copyWith(parentSectionId: newSection.sectionId),
+        ],
+      );
+      final updatedStarSection = starSection.copyWith(
+        tasks: starSection.tasks
+            .map(
+              (t) => t.taskId == task.taskId
+                  ? task.copyWith(parentSectionId: newSection.sectionId)
+                  : t,
+            )
+            .toList(),
+      );
+      final newList = [...state.sections];
+      newList[0] = updatedStarSection;
+      newList[oldSectionIndex] = updatedOldSection;
+      newList[newSectionIndex] = updatedNewSection;
+      state = state.copyWith(selectedIndex: newSectionIndex, sections: newList);
+      return;
+    }
+
+    final oldSection = state.sections[oldSectionIndex];
+    final newSection = state.sections[newSectionIndex];
+    final updatedOldSection = oldSection.copyWith(
+      tasks: oldSection.tasks.where((t) => t.taskId != task.taskId).toList(),
+    );
+    final updatedNewSection = newSection.copyWith(
+      tasks: [
+        ...newSection.tasks,
+        task.copyWith(parentSectionId: newSection.sectionId),
+      ],
+    );
+    final newList = [...state.sections];
+
+    newList[oldSectionIndex] = updatedOldSection;
+    newList[newSectionIndex] = updatedNewSection;
+    state = state.copyWith(selectedIndex: newSectionIndex, sections: newList);
+  }
+
+  void editTaskName(TaskModel task,String newTaskName) {
+    //if the task is starred we have to change the taskName in star section and parentSection
+    if (task.starred) {
+      final starSection = state.sections[0];
+      final updatedStarSection = starSection.copyWith(
+        tasks: starSection.tasks
+            .map(
+              (t) => t.taskId == task.taskId
+                  ? t.copyWith(taskName: newTaskName)
+                  : t,
+            )
+            .toList(),
+      );
+      final parentSectionIndex = state.sections.indexWhere(
+        (s) => s.sectionId == task.parentSectionId,
+      );
+      final parentSection = state.sections[parentSectionIndex];
+      final updatedParentSection = parentSection.copyWith(
+        tasks: parentSection.tasks
+            .map(
+              (t) => t.taskId == task.taskId
+                  ? t.copyWith(taskName: newTaskName)
+                  : t,
+            )
+            .toList(),
+      );
+      final newList = [...state.sections];
+      newList[0] = updatedStarSection;
+      newList[parentSectionIndex] = updatedParentSection;
+      state = state.copyWith(sections: newList);
+    } else {
+      // if the star is completed eather it will be in the completed list or it will be in task list
+      if (task.completed) {
+        final parentSectionIndex = state.sections.indexWhere(
+          (s) => s.sectionId == task.parentSectionId,
+        );
+        final parentSection = state.sections[parentSectionIndex];
+        final updatedParentSection = parentSection.copyWith(
+          completedTasks: parentSection.completedTasks
+              .map(
+                (t) => t.taskId == task.taskId
+                    ? t.copyWith(taskName: newTaskName)
+                    : t,
+              )
+              .toList(),
+        );
+        final newList = [...state.sections];
+        newList[parentSectionIndex] = updatedParentSection;
+        state = state.copyWith(sections: newList);
+      }
+      else{
+        final parentSectionIndex = state.sections.indexWhere(
+          (s) => s.sectionId == task.parentSectionId,
+        );
+        final parentSection = state.sections[parentSectionIndex];
+        final updatedParentSection = parentSection.copyWith(
+          tasks: parentSection.tasks
+              .map(
+                (t) => t.taskId == task.taskId
+                    ? t.copyWith(taskName: newTaskName)
+                    : t,
+              )
+              .toList(),
+        );
+        final newList = [...state.sections];
+        newList[parentSectionIndex] = updatedParentSection;
+        state = state.copyWith(sections: newList);
+      }
+    }
+  }
+
+  void deleteTask(TaskModel task) {
     //we have to delete the task from the parentSection for every condition
     //we have to delete the task wheather it is in completed list or wheather it is in task list
     //conditions :
