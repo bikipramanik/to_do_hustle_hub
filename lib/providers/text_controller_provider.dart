@@ -19,3 +19,7 @@ final taskNameControllerInDeatilScreen = Provider.autoDispose
     .family<TextEditingController, String>((ref, initialText) {
       return TextEditingController(text: initialText);
     });
+final taskDescriptionControllerInDeatilScreen = Provider.autoDispose
+    .family<TextEditingController, String>((ref, initialText) {
+      return TextEditingController(text: initialText);
+    });

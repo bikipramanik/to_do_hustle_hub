@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:to_do_hustle_hub/models/task_model.dart';
 import 'package:to_do_hustle_hub/providers/task_manager.dart';
+import 'package:to_do_hustle_hub/screens/task_detail_screen.dart';
 
 class CompletedTaskWidget extends ConsumerWidget {
   final TaskModel task;
@@ -13,6 +14,10 @@ class CompletedTaskWidget extends ConsumerWidget {
     return Material(
       color: const Color.fromARGB(255, 22, 22, 22),
       child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TaskDetailScreen(task: task)),
+        ),
         borderRadius: BorderRadius.circular(12),
         enableFeedback: true,
 

@@ -4,6 +4,7 @@ class TaskModel {
   static final uuid = Uuid();
   final String taskId;
   final String taskName;
+  final String? taskDescription;
   final String parentSectionId;
   final bool starred;
   final bool completed;
@@ -11,6 +12,7 @@ class TaskModel {
   TaskModel({
     String? taskId,
     required this.taskName,
+    this.taskDescription,
     required this.parentSectionId,
     this.starred = false,
     this.completed = false,
@@ -19,6 +21,7 @@ class TaskModel {
   TaskModel copyWith({
     String? taskId,
     String? taskName,
+    String? taskDescription,
     String? parentSectionId,
     bool? starred,
     bool? completed,
@@ -26,6 +29,7 @@ class TaskModel {
     return TaskModel(
       taskId: taskId ?? this.taskId,
       taskName: taskName ?? this.taskName,
+      taskDescription: taskDescription ?? this.taskDescription,
       parentSectionId: parentSectionId ?? this.parentSectionId,
       starred: starred ?? this.starred,
       completed: completed ?? this.completed,

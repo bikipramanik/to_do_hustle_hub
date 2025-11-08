@@ -13,20 +13,54 @@ class TaskDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final taskState = ref.watch(taskManagerProvider);
     final taskManager = ref.watch(taskManagerProvider.notifier);
-    final updatedTask = taskState.sections
-        .expand((s) => s.tasks)
-        .firstWhere((t) => t.taskId == task.taskId);
+
+    final allCompleted = taskState.sections.expand((s) => s.completedTasks);
+    final allUncompleted = taskState.sections.expand((s) => s.tasks);
+
+    TaskModel? updatedTask;
+    if (task.completed) {
+      updatedTask = allCompleted.firstWhere(
+        (t) => t.taskId == task.taskId,
+        orElse: () => task, // fallback to the passed-in task
+      );
+    } else {
+      updatedTask = allUncompleted.firstWhere(
+        (t) => t.taskId == task.taskId,
+        orElse: () => task,
+      );
+    }
 
     final taskNameController = ref.watch(
       taskNameControllerInDeatilScreen(task.taskName),
     );
+    final taskDescriptionController = ref.watch(
+      taskNameControllerInDeatilScreen(task.taskDescription ?? ""),
+    );
 
     return Scaffold(
+      floatingActionButton: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.lightBlueAccent,
+        ),
+        onPressed: () {
+          if (task.completed) {
+            Navigator.pop(context);
+            taskManager.markAsInComplete(task);
+          } else {
+            Navigator.pop(context);
+            taskManager.markAsComplete(task);
+          }
+        },
+        child: Text(
+          task.completed ? "Mark as InCompleted" : "Mark As Completed",
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
       appBar: AppBar(
         actions: [
           IconButton(
             onPressed: () {
-              if (updatedTask.starred) {
+              if (updatedTask!.starred) {
                 taskManager.markAsUnstar(updatedTask);
               } else {
                 taskManager.markAsStar(updatedTask);
@@ -201,6 +235,7 @@ class TaskDetailScreen extends ConsumerWidget {
                 Icon(Icons.notes),
                 Expanded(
                   child: TextField(
+                    controller: taskDescriptionController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: "add details...",

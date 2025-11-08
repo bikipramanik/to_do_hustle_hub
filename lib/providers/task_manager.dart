@@ -212,7 +212,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
     state = state.copyWith(selectedIndex: newSectionIndex, sections: newList);
   }
 
-  void editTaskName(TaskModel task,String newTaskName) {
+  void editTaskName(TaskModel task, String newTaskName) {
     //if the task is starred we have to change the taskName in star section and parentSection
     if (task.starred) {
       final starSection = state.sections[0];
@@ -261,8 +261,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         final newList = [...state.sections];
         newList[parentSectionIndex] = updatedParentSection;
         state = state.copyWith(sections: newList);
-      }
-      else{
+      } else {
         final parentSectionIndex = state.sections.indexWhere(
           (s) => s.sectionId == task.parentSectionId,
         );
@@ -388,7 +387,11 @@ class TaskManager extends StateNotifier<TaskStateModel> {
   }
 
   //add Task to the selection section
-  void addTask({required String taskName, bool star = false}) {
+  void addTask({
+    required String taskName,
+    bool star = false,
+    String? description,
+  }) {
     //If the user trying to create task from star section I want to create the task as parentSection of 1 and 0 both
     if (state.selectedIndex == 0) {
       print(
@@ -397,6 +400,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       final selectedSection = state.sections[1];
       final newTask = TaskModel(
         taskName: taskName,
+        taskDescription: description,
         parentSectionId: selectedSection.sectionId,
         starred: state.selectedIndex == 0,
       );
@@ -424,6 +428,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       );
       final newTask = TaskModel(
         taskName: taskName,
+        taskDescription: description,
         parentSectionId: parentSection.sectionId,
         starred: star,
       );
@@ -457,6 +462,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
           ...selectedSection.tasks,
           TaskModel(
             taskName: taskName,
+            taskDescription: description,
             parentSectionId: selectedSection.sectionId,
           ),
         ],

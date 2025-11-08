@@ -72,7 +72,19 @@ class TaskWidget extends ConsumerWidget {
                     ? Icon(Icons.check, color: Colors.green)
                     : Icon(Icons.circle_outlined),
               ),
-              Text(task.taskName),
+              Column(
+                children: [
+                  Text(task.taskName),
+                  if (task.taskDescription != null)
+                    Text(
+                      task.taskDescription!,
+                      style: TextStyle(
+                        color: Colors.white60,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
               Spacer(),
               IconButton(
                 onPressed: () {

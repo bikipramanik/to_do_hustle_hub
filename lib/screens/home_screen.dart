@@ -113,11 +113,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       taskManager.addTask(
                                         taskName: addTaskNameController.text
                                             .trim(),
+                                        description: addDescriptionController
+                                            .text
+                                            .trim(),
                                         star: true,
                                       );
                                     } else {
                                       taskManager.addTask(
                                         taskName: addTaskNameController.text
+                                            .trim(),
+                                        description: addDescriptionController
+                                            .text
                                             .trim(),
                                       );
                                     }
