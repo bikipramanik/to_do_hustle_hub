@@ -1,12 +1,28 @@
+import 'package:hive_flutter/adapters.dart';
 import 'package:uuid/uuid.dart';
 
+part 'task_model.g.dart';
+
+@HiveType(typeId: 0)
 class TaskModel {
   static final uuid = Uuid();
+
+  @HiveField(0)
   final String taskId;
+
+  @HiveField(1)
   final String taskName;
+
+  @HiveField(2)
   final String? taskDescription;
+
+  @HiveField(3)
   final String parentSectionId;
+
+  @HiveField(4)
   final bool starred;
+
+  @HiveField(5)
   final bool completed;
 
   TaskModel({

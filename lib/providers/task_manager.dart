@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:hive_flutter/adapters.dart';
 import 'package:to_do_hustle_hub/models/section_model.dart';
 import 'package:to_do_hustle_hub/models/task_model.dart';
 import 'package:to_do_hustle_hub/models/task_state_model.dart';
 import 'package:to_do_hustle_hub/utils/dummy_data.dart';
 
 class TaskManager extends StateNotifier<TaskStateModel> {
-  TaskManager() : super(dummyData);
+  final Box<TaskStateModel> _taskStateBox;
+  TaskManager._(this._taskStateBox, TaskStateModel initialState)
+    : super(initialState);
+
+  /// factory constructor to load from Hive or use dummyData
+  static Future<TaskManager> initialize() async {
+    final box = Hive.box<TaskStateModel>('taskStateBox');
+
+    if (box.isNotEmpty) {
+      final savedState = box.getAt(0);
+      if (savedState != null) {
+        debugPrint('Loaded state from Hive');
+        return TaskManager._(box, savedState);
+      }
+    }
+
+    // First time run — use dummy data
+    debugPrint('Using dummy data (first run)');
+    final manager = TaskManager._(box, dummyData);
+    await box.put('taskState', dummyData);
+
+    return manager;
+  }
+
+  // helper to persist changes
+  Future<void> _saveStateToHive() async {
+    await _taskStateBox.put('taskState', state);
+  }
 
   void toggleAddDescriptionWhileAddingTask({bool? reset}) {
     if (reset == true) {
@@ -15,6 +43,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         "--Resetting Desc----------${state.addDescriptionWhileAddingTask}",
       );
       state = state.copyWith(addDescriptionWhileAddingTask: false);
+      _saveStateToHive();
       return;
     }
     debugPrint("----------------------${state.addDescriptionWhileAddingTask}");
@@ -22,24 +51,29 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       addDescriptionWhileAddingTask: !state.addDescriptionWhileAddingTask,
     );
     debugPrint("----------------------${state.addDescriptionWhileAddingTask}");
+    _saveStateToHive();
   }
 
   void toggleMarkStarWhileAddingTask({bool? reset}) {
     if (reset == true) {
       debugPrint("--Resetting Star----------${state.starWhileAddingTask}");
       state = state.copyWith(starWhileAddingTask: false);
+      _saveStateToHive();
+
       return;
     }
     debugPrint("----------------------${state.starWhileAddingTask}");
 
     state = state.copyWith(starWhileAddingTask: !state.starWhileAddingTask);
     debugPrint("----------------------${state.starWhileAddingTask}");
+    _saveStateToHive();
   }
 
   //change Screen
   void changeScreen(int index) {
     final newState = state.copyWith(selectedIndex: index);
     state = newState;
+    _saveStateToHive();
   }
 
   //delete section
@@ -56,10 +90,12 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newSections.add(state.sections[i]);
     }
     state = state.copyWith(sections: newSections);
+    _saveStateToHive();
   }
 
   void toggleShowCompletedTask() {
     state = state.copyWith(showCompletedTask: !state.showCompletedTask);
+    _saveStateToHive();
   }
 
   void markAsComplete(TaskModel task) {
@@ -101,6 +137,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newSectionList[0] = updatedStarSection;
       newSectionList[parentIndex] = updatedParentSection;
       state = state.copyWith(sections: newSectionList);
+      _saveStateToHive();
     } else {
       final parentIndex = state.sections.indexWhere(
         (s) => s.sectionId == task.parentSectionId,
@@ -122,6 +159,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       final newSectionList = [...state.sections];
       newSectionList[parentIndex] = updatedParentSection;
       state = state.copyWith(sections: newSectionList);
+      _saveStateToHive();
     }
   }
 
@@ -136,7 +174,10 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       final updatedStarSection = starSection.copyWith(
         tasks: [...starSection.tasks, task.copyWith(completed: false)],
       );
-      _updateSection(updatedStarSection);
+      final newList = [...state.sections];
+      newList[0] = updatedStarSection;
+      state = state.copyWith(sections: newList);
+      _saveStateToHive();
     }
     //remove from parentSections.completeTasks
     //add to parentSection.tasks with task.complete = false
@@ -153,7 +194,10 @@ class TaskManager extends StateNotifier<TaskStateModel> {
           .where((t) => t.taskId != task.taskId)
           .toList(),
     );
-    _updateSection(updatedSection);
+    final newList = [...state.sections];
+    newList[state.selectedIndex] = updatedSection;
+    state = state.copyWith(sections: newList);
+    _saveStateToHive();
   }
 
   void moveTaskToAnotherSection(
@@ -191,6 +235,8 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newList[oldSectionIndex] = updatedOldSection;
       newList[newSectionIndex] = updatedNewSection;
       state = state.copyWith(selectedIndex: newSectionIndex, sections: newList);
+      _saveStateToHive();
+
       return;
     }
 
@@ -210,6 +256,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
     newList[oldSectionIndex] = updatedOldSection;
     newList[newSectionIndex] = updatedNewSection;
     state = state.copyWith(selectedIndex: newSectionIndex, sections: newList);
+    _saveStateToHive();
   }
 
   void editTaskName(TaskModel task, String newTaskName) {
@@ -242,6 +289,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newList[0] = updatedStarSection;
       newList[parentSectionIndex] = updatedParentSection;
       state = state.copyWith(sections: newList);
+      _saveStateToHive();
     } else {
       // if the star is completed eather it will be in the completed list or it will be in task list
       if (task.completed) {
@@ -261,6 +309,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         final newList = [...state.sections];
         newList[parentSectionIndex] = updatedParentSection;
         state = state.copyWith(sections: newList);
+        _saveStateToHive();
       } else {
         final parentSectionIndex = state.sections.indexWhere(
           (s) => s.sectionId == task.parentSectionId,
@@ -278,6 +327,79 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         final newList = [...state.sections];
         newList[parentSectionIndex] = updatedParentSection;
         state = state.copyWith(sections: newList);
+        _saveStateToHive();
+      }
+    }
+  }
+  void editTaskDescription(TaskModel task, String newTaskDescription) {
+    //if the task is starred we have to change the taskName in star section and parentSection
+    if (task.starred) {
+      final starSection = state.sections[0];
+      final updatedStarSection = starSection.copyWith(
+        tasks: starSection.tasks
+            .map(
+              (t) => t.taskId == task.taskId
+                  ? t.copyWith(taskDescription: newTaskDescription)
+                  : t,
+            )
+            .toList(),
+      );
+      final parentSectionIndex = state.sections.indexWhere(
+        (s) => s.sectionId == task.parentSectionId,
+      );
+      final parentSection = state.sections[parentSectionIndex];
+      final updatedParentSection = parentSection.copyWith(
+        tasks: parentSection.tasks
+            .map(
+              (t) => t.taskId == task.taskId
+                  ? t.copyWith(taskDescription: newTaskDescription)
+                  : t,
+            )
+            .toList(),
+      );
+      final newList = [...state.sections];
+      newList[0] = updatedStarSection;
+      newList[parentSectionIndex] = updatedParentSection;
+      state = state.copyWith(sections: newList);
+      _saveStateToHive();
+    } else {
+      // if the star is completed eather it will be in the completed list or it will be in task list
+      if (task.completed) {
+        final parentSectionIndex = state.sections.indexWhere(
+          (s) => s.sectionId == task.parentSectionId,
+        );
+        final parentSection = state.sections[parentSectionIndex];
+        final updatedParentSection = parentSection.copyWith(
+          completedTasks: parentSection.completedTasks
+              .map(
+                (t) => t.taskId == task.taskId
+                    ? t.copyWith(taskDescription: newTaskDescription)
+                    : t,
+              )
+              .toList(),
+        );
+        final newList = [...state.sections];
+        newList[parentSectionIndex] = updatedParentSection;
+        state = state.copyWith(sections: newList);
+        _saveStateToHive();
+      } else {
+        final parentSectionIndex = state.sections.indexWhere(
+          (s) => s.sectionId == task.parentSectionId,
+        );
+        final parentSection = state.sections[parentSectionIndex];
+        final updatedParentSection = parentSection.copyWith(
+          tasks: parentSection.tasks
+              .map(
+                (t) => t.taskId == task.taskId
+                    ? t.copyWith(taskDescription: newTaskDescription)
+                    : t,
+              )
+              .toList(),
+        );
+        final newList = [...state.sections];
+        newList[parentSectionIndex] = updatedParentSection;
+        state = state.copyWith(sections: newList);
+        _saveStateToHive();
       }
     }
   }
@@ -316,6 +438,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newList[0] = updatedStarSection;
       newList[parentSectionIndex] = updatedParentSection;
       state = state.copyWith(sections: newList);
+      _saveStateToHive();
     }
     //if we are not deleting the task from star section then
     else {
@@ -335,6 +458,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         final newList = [...state.sections];
         newList[parentSectionIndex] = updatedParentSection;
         state = state.copyWith(sections: newList);
+        _saveStateToHive();
       } //if the task is not comepleted we have to check if the task starred or not
       else {
         print("deleting from non InComplete section");
@@ -359,6 +483,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
           newList[0] = updatedStarSection;
           newList[parentSectionIndex] = updatedParentSection;
           state = state.copyWith(sections: newList);
+          _saveStateToHive();
         } else {
           print("---- deleting from Un star section");
           final parentSectionIndex = state.selectedIndex;
@@ -371,6 +496,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
           final newList = [...state.sections];
           newList[parentSectionIndex] = updatedParentSection;
           state = state.copyWith(sections: newList);
+          _saveStateToHive();
         }
       }
     }
@@ -384,6 +510,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
         SectionModel(sectionName: name),
       ],
     );
+    _saveStateToHive();
   }
 
   //add Task to the selection section
@@ -414,6 +541,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newSectionList[0] = updateStarSection;
       newSectionList[1] = updatedSection;
       state = state.copyWith(sections: newSectionList);
+      _saveStateToHive();
     } else if (state.selectedIndex != 0 && star == true) {
       final parentSectionIndex = state.sections.indexWhere(
         (s) => s.sectionId == state.sections[state.selectedIndex].sectionId,
@@ -445,6 +573,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       newList[0] = updatedStarSection;
       newList[parentSectionIndex] = updatedParentSection;
       state = state.copyWith(sections: newList);
+      _saveStateToHive();
     } else {
       final parentSectionIndex = state.sections.indexWhere(
         (s) => s.sectionId == state.sections[state.selectedIndex].sectionId,
@@ -467,7 +596,10 @@ class TaskManager extends StateNotifier<TaskStateModel> {
           ),
         ],
       );
-      _updateSection(updatedSection);
+      final newList = [...state.sections];
+      newList[parentSectionIndex] = updatedSection;
+      state = state.copyWith(sections: newList);
+      _saveStateToHive();
     }
   }
 
@@ -494,6 +626,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
     newList[0] = updatedStarSection;
     newList[state.selectedIndex] = updatedParentSection;
     state = state.copyWith(sections: newList);
+    _saveStateToHive();
   }
 
   void markAsUnstar(TaskModel task) {
@@ -528,29 +661,7 @@ class TaskManager extends StateNotifier<TaskStateModel> {
     newList[0] = updatedStarSection;
     newList[parentSectionIndex] = updatedParentSection;
     state = state.copyWith(sections: newList);
-  }
-
-  //Helper Function
-  void _updateSection(SectionModel updatedSection) {
-    print(
-      '--------Updated section: ${updatedSection.sectionName}, '
-      'tasks: ${updatedSection.tasks.length}, '
-      'completed: ${updatedSection.completedTasks.length}',
-    );
-
-    final newList = [
-      for (final section in state.sections)
-        section.sectionId == updatedSection.sectionId
-            ? updatedSection
-            : section,
-    ];
-    print(
-      '-------Updated section: ${updatedSection.sectionName}, '
-      'tasks: ${updatedSection.tasks.length}, '
-      'completed: ${updatedSection.completedTasks.length}',
-    );
-
-    state = state.copyWith(sections: newList);
+    _saveStateToHive();
   }
 
   void printAllTasks(int index) {
@@ -558,16 +669,13 @@ class TaskManager extends StateNotifier<TaskStateModel> {
       print("Tasks ----- ${task.taskName}");
     }
   }
-
-  void _replaceSectionAt(int index, SectionModel section) {
-    final newList = [...state.sections];
-    newList[index] = section;
-    state = state.copyWith(sections: newList);
-  }
 }
 
-final taskManagerProvider = StateNotifierProvider<TaskManager, TaskStateModel>((
-  ref,
-) {
-  return TaskManager();
+final taskManagerProvider = StateNotifierProvider<TaskManager, TaskStateModel>(
+  (ref) => throw UnimplementedError(),
+);
+
+final taskManagerInitializer = FutureProvider<TaskManager>((ref) async {
+  final manager = await TaskManager.initialize();
+  return manager;
 });

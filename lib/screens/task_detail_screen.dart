@@ -34,7 +34,7 @@ class TaskDetailScreen extends ConsumerWidget {
       taskNameControllerInDeatilScreen(task.taskName),
     );
     final taskDescriptionController = ref.watch(
-      taskNameControllerInDeatilScreen(task.taskDescription ?? ""),
+      taskNameControllerInDeatilScreen(task.taskDescription ?? " "),
     );
 
     return Scaffold(
@@ -244,6 +244,13 @@ class TaskDetailScreen extends ConsumerWidget {
                     // autofocus: true,
                     cursorColor: Colors.lightBlueAccent,
                     onTapOutside: (event) {
+                      if (task.taskDescription !=
+                          taskDescriptionController.text.trim()) {
+                        taskManager.editTaskDescription(
+                          task,
+                          taskDescriptionController.text.trim(),
+                        );
+                      }
                       FocusScope.of(context).unfocus();
                     },
                   ),
